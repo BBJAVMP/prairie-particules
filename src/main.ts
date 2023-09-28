@@ -27,6 +27,7 @@ interface Dot {
 const dots: Dot[] = [];
 const numDots = 60; // Number of dots
 
+
 for (let i = 0; i < numDots; i++) {
   // Generate random properties for each dot
   const dot: Dot = {
@@ -36,9 +37,9 @@ for (let i = 0; i < numDots; i++) {
     speedX: getRandom(-2, 2),
     speedY: getRandom(-2, 2),
     color: getRandomColor(), // Use a function to get a random gradient color
-  };
+   };
+ dots.push(dot);
 
-  dots.push(dot);
 }
 
 // Track the mouse position
@@ -149,9 +150,58 @@ function drawDots() {
   }
 }
 
+  // résolution des collisions (encore un peu buggé)
+  function handleDotCollisions() {
+    for (let i = 0; i < dots.length; i++) {
+      for (let j = i + 1; j < dots.length; j++) {
+        const dot1 = dots[i];
+        const dot2 = dots[j];
+        const dx = dot2.x - dot1.x;
+        const dy = dot2.y - dot1.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance < dot1.radius + dot2.radius) {
+          // calcul collision et angle de collision
+          const angle = Math.atan2(dy, dx);
+          const overlap = dot1.radius + dot2.radius - distance;
+
+          // Calcul position points suite à collision
+          const offsetX = (overlap / 2) * Math.cos(angle);
+          const offsetY = (overlap / 2) * Math.sin(angle);
+
+          dot1.x -= offsetX;
+          dot1.y -= offsetY;
+          dot2.x += offsetX;
+          dot2.y += offsetY;
+
+          // calcul vitesse après collision
+          const angle1 = Math.atan2(dot1.speedY, dot1.speedX);
+          const angle2 = Math.atan2(dot2.speedY, dot2.speedX);
+          const magnitude1 = Math.sqrt(dot1.speedX ** 2 + dot1.speedY ** 2);
+          const magnitude2 = Math.sqrt(dot2.speedX ** 2 + dot2.speedY ** 2);
+
+          const newSpeedX1 = magnitude1 * Math.cos(angle1 - angle) * Math.cos(angle) + magnitude2 * Math.sin(angle2 - angle) * Math.cos(angle + Math.PI / 2);
+          const newSpeedY1 = magnitude1 * Math.cos(angle1 - angle) * Math.sin(angle) + magnitude2 * Math.sin(angle2 - angle) * Math.sin(angle + Math.PI / 2);
+          const newSpeedX2 = magnitude1 * Math.sin(angle1 - angle) * Math.cos(angle + Math.PI / 2) + magnitude2 * Math.cos(angle2 - angle) * Math.cos(angle);
+          const newSpeedY2 = magnitude1 * Math.sin(angle1 - angle) * Math.sin(angle + Math.PI / 2) + magnitude2 * Math.cos(angle2 - angle) * Math.sin(angle);
+
+          dot1.speedX = newSpeedX1;
+          dot1.speedY = newSpeedY1;
+          dot2.speedX = newSpeedX2;
+          dot2.speedY = newSpeedY2;
+        }
+      }
+    }
+  }
+
+
+
+
+
 function animate() {
   updateDots();
   drawDots();
+  handleDotCollisions();
   requestAnimationFrame(animate);
 }
 
